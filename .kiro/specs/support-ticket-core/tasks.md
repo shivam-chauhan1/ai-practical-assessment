@@ -6,7 +6,7 @@ This plan implements a full-stack support ticket management system with an Expre
 
 ## Tasks
 
-- [ ] 1. Prisma schema, migration, and seed script
+- [x] 1. Prisma schema, migration, and seed script
   - [x] 1.1 Create Prisma schema with User, Ticket, Comment models and native PG enums (Status, Priority, Role)
     - Initialize `server/prisma/schema.prisma` with generator, datasource, enums (Status, Priority, Role), and all three models with relations and field constraints as defined in the design
     - Run `npx prisma migrate dev` to generate the initial migration
@@ -144,8 +144,8 @@ This plan implements a full-stack support ticket management system with an Expre
 - [ ] 11. Checkpoint — Backend fully tested
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Frontend project setup
-  - [ ] 12.1 Initialize client package with Vite, React, TypeScript, React Router
+- [x] 12. Frontend project setup
+  - [x] 12.1 Initialize client package with Vite, React, TypeScript, React Router
     - Create `client/` with Vite React-TS template
     - Install dependencies: react-router-dom
     - Install dev dependencies: @testing-library/react, @testing-library/jest-dom, vitest, jsdom, fast-check
@@ -153,16 +153,16 @@ This plan implements a full-stack support ticket management system with an Expre
     - Set up React Router with routes: `/` (list), `/tickets/new` (create), `/tickets/:id` (detail)
     - _Requirements: 2.2, 3.3, 7.5_
 
-- [ ] 13. Frontend API layer
-  - [ ] 13.1 Implement API client and typed fetch wrappers
+- [x] 13. Frontend API layer
+  - [x] 13.1 Implement API client and typed fetch wrappers
     - Create `client/src/api/client.ts` — base `apiRequest<T>` function that handles JSON parsing, detects non-2xx responses, parses ApiErrorResponse, throws ApiError, catches network TypeError and converts to NETWORK_ERROR ApiError
     - Create `client/src/api/tickets.ts` — createTicket, listTickets, getTicket, updateTicket, changeTicketStatus functions with typed request/response
     - Create `client/src/api/comments.ts` — addComment function
     - Define shared TypeScript types for all request/response interfaces
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-- [ ] 14. Ticket list page with search and filter UI
-  - [ ] 14.1 Implement TicketListPage with search/filter controls
+- [x] 14. Ticket list page with search and filter UI
+  - [x] 14.1 Implement TicketListPage with search/filter controls
     - Create `client/src/pages/TicketListPage.tsx` — fetches and displays tickets, includes SearchBar component (keyword input + status dropdown), shows TicketCard for each result, shows EmptyState when no results
     - Create `client/src/components/SearchBar.tsx` — keyword text input and status filter dropdown, triggers combined query on change/submit
     - Create `client/src/components/TicketCard.tsx` — displays title, status badge, priority badge, assignee name, updatedAt
@@ -170,16 +170,16 @@ This plan implements a full-stack support ticket management system with an Expre
     - Create `client/src/components/EmptyState.tsx`
     - _Requirements: 2.2, 2.3, 7.5, 7.6_
 
-- [ ] 15. Ticket detail page — read-only view with comments
-  - [ ] 15.1 Implement TicketDetailPage with read-only ticket view and comments
+- [x] 15. Ticket detail page — read-only view with comments
+  - [x] 15.1 Implement TicketDetailPage with read-only ticket view and comments
     - Create `client/src/pages/TicketDetailPage.tsx` — fetches ticket by ID, displays all fields read-only (title, description, status, priority, assignee, creator, timestamps), renders CommentList and CommentForm, handles 404 with not-found state
     - Create `client/src/components/CommentList.tsx` — ordered list of comments showing body, author name, createdAt
     - Create `client/src/components/CommentForm.tsx` — text input for new comment, submits via API, appends new comment to list without full page reload
     - This task is purely the read-only detail view and comment interaction — no edit mode, no status controls
     - _Requirements: 3.3, 3.4, 6.6, 6.7_
 
-- [ ] 16. Ticket detail page — status transition controls
-  - [ ] 16.1 Implement StatusTransitionControls on detail page
+- [x] 16. Ticket detail page — status transition controls
+  - [x] 16.1 Implement StatusTransitionControls on detail page
     - Create `client/src/components/StatusTransitionControls.tsx` using the detailed component sketch from design.md:
       - Props: `currentStatus`, `validTransitions` (from API response), `onTransition` (async callback), `isLoading`
       - Internal state: `pendingTarget` (which button was clicked), `error` (failed transition message)
@@ -194,27 +194,27 @@ This plan implements a full-stack support ticket management system with an Expre
     - On successful transition, new `currentStatus` + `validTransitions` flow in via props automatically
     - _Requirements: 5.8, 5.9, 5.10_
 
-- [ ] 17. Create ticket page and form
-  - [ ] 17.1 Implement CreateTicketPage with ticket form
+- [x] 17. Create ticket page and form
+  - [x] 17.1 Implement CreateTicketPage with ticket form
     - Create `client/src/pages/CreateTicketPage.tsx` — renders TicketForm in create mode, on success navigates to ticket list
     - Create `client/src/components/TicketForm.tsx` — shared form component with title, description, priority dropdown, assignee dropdown (fetches users), submit handler; used for both create and edit
     - On successful creation, display the new ticket in the list
     - _Requirements: 1.7, 1.8_
 
-- [ ] 18. Ticket edit form
-  - [ ] 18.1 Implement edit functionality on detail page
+- [x] 18. Ticket edit form
+  - [x] 18.1 Implement edit functionality on detail page
     - Add edit mode to TicketDetailPage using TicketForm in edit mode — pre-populates fields, submits PATCH update
     - Render fields as read-only when ticket is in terminal state (CLOSED/CANCELLED)
     - On successful update, refresh ticket detail display
     - _Requirements: 4.9, 4.10, 11.3, 11.4_
 
-- [ ] 19. Error display component and error handling integration
-  - [ ] 19.1 Implement ErrorDisplay component and wire into all pages
+- [x] 19. Error display component and error handling integration
+  - [x] 19.1 Implement ErrorDisplay component and wire into all pages
     - Create `client/src/components/ErrorDisplay.tsx` — handles VALIDATION_ERROR (shows field-specific messages), NOT_FOUND, TICKET_LOCKED (specific locked message), INVALID_TRANSITION, NETWORK_ERROR (server unavailable message)
     - Integrate ErrorDisplay into all pages and forms — never silently swallow errors
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 11.4_
 
-- [ ] 20. Checkpoint — Frontend complete
+- [x] 20. Checkpoint — Frontend complete
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ]* 21. Frontend component tests

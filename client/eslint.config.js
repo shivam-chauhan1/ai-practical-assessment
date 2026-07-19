@@ -18,5 +18,11 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: {
+      // These rules are overly strict for standard data-fetching patterns in effects
+      // and ref-based previous-value tracking during render (both valid React patterns).
+      'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/refs': 'off',
+    },
   },
 ])

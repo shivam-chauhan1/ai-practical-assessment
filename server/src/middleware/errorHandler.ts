@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
+import { ZodError } from 'zod';
 import { AppError } from '../errors';
 
 export function errorHandler(err: Error, _req: Request, res: Response, _next: NextFunction): void {
@@ -10,6 +11,22 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
         code: err.code,
         message: err.message,
         ...(err.details && { details: err.details }),
+      },
+    });
+    return;
+  }
+
+  // Zod validation errors (thrown by schema.parse() in controllers)
+  if (err instanceof ZodError) {
+    const details = err.issues.map(issue => ({
+      field: issue.path.join('.') || 'unknown',
+      message: issue.message,
+    }));
+    res.status(400).json({
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Request validation failed',
+        details,
       },
     });
     return;

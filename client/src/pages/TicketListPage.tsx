@@ -5,6 +5,7 @@ import { ApiError } from '../api/client';
 import type { Ticket, Status } from '../api/types';
 import { useDebounce } from '../hooks/useDebounce';
 import SearchBar from '../components/SearchBar';
+import TagFilter from '../components/TagFilter';
 import TicketCard from '../components/TicketCard';
 import EmptyState from '../components/EmptyState';
 import ErrorDisplay from '../components/ErrorDisplay';
@@ -15,17 +16,20 @@ export default function TicketListPage() {
   const [error, setError] = useState<ApiError | null>(null);
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState<Status | ''>('');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   const debouncedKeyword = useDebounce(keyword, 300);
+  const debouncedTagIds = useDebounce(selectedTagIds, 300);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    const params: { keyword?: string; status?: Status } = {};
+    const params: { keyword?: string; status?: Status; tag?: string } = {};
     if (debouncedKeyword) params.keyword = debouncedKeyword;
     if (status) params.status = status;
+    if (debouncedTagIds.length > 0) params.tag = debouncedTagIds.join(',');
 
     listTickets(params)
       .then((data) => {
@@ -45,7 +49,7 @@ export default function TicketListPage() {
       });
 
     return () => { cancelled = true; };
-  }, [debouncedKeyword, status]);
+  }, [debouncedKeyword, status, debouncedTagIds]);
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px' }}>
@@ -71,6 +75,11 @@ export default function TicketListPage() {
         onKeywordChange={setKeyword}
         status={status}
         onStatusChange={setStatus}
+      />
+
+      <TagFilter
+        selectedTagIds={selectedTagIds}
+        onSelectionChange={setSelectedTagIds}
       />
 
       {error && (

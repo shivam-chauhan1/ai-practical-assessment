@@ -19,6 +19,7 @@ export async function listTickets(params?: TicketSearchParams): Promise<Ticket[]
   const searchParams = new URLSearchParams();
   if (params?.keyword) searchParams.set('keyword', params.keyword);
   if (params?.status) searchParams.set('status', params.status);
+  if (params?.tag) searchParams.set('tag', params.tag);
   const query = searchParams.toString();
   return apiRequest<Ticket[]>(`/tickets${query ? `?${query}` : ''}`);
 }

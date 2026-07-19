@@ -9,6 +9,11 @@ vi.mock('../src/api/tickets', () => ({
   listTickets: vi.fn(),
 }));
 
+// Mock the tags API module (used by TagFilter)
+vi.mock('../src/api/tags', () => ({
+  listTags: vi.fn().mockResolvedValue([]),
+}));
+
 // Mock useDebounce to return the value immediately (no delay)
 vi.mock('../src/hooks/useDebounce', () => ({
   useDebounce: (value: unknown) => value,
@@ -32,6 +37,7 @@ const mockTicket: Ticket = {
   validTransitions: ['IN_PROGRESS', 'CANCELLED'] as Status[],
   creator: { id: 'user-1', name: 'John Admin', email: 'john@test.com', role: 'ADMIN' as Role, createdAt: '2024-01-01T00:00:00Z' },
   assignee: { id: 'user-2', name: 'Jane Agent', email: 'jane@test.com', role: 'AGENT' as Role, createdAt: '2024-01-01T00:00:00Z' },
+  tags: [],
 };
 
 function renderPage() {

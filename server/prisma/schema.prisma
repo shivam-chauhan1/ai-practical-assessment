@@ -53,6 +53,16 @@ model Ticket {
   creator     User     @relation("CreatedBy", fields: [createdBy], references: [id])
   assignee    User?    @relation("AssignedTo", fields: [assignedTo], references: [id])
   comments    Comment[]
+  tags        Tag[]
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @db.VarChar(50)
+  createdAt DateTime @default(now())
+  tickets   Ticket[]
+
+  @@unique([name], map: "Tag_name_ci_key")
 }
 
 model Comment {

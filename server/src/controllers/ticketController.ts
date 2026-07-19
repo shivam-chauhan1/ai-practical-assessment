@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as ticketService from '../services/ticketService';
+import { ValidationError } from '../errors';
 
 export async function createTicket(req: Request, res: Response, next: NextFunction) {
   try {
@@ -12,8 +13,17 @@ export async function createTicket(req: Request, res: Response, next: NextFuncti
 
 export async function listTickets(req: Request, res: Response, next: NextFunction) {
   try {
-    const filters = req.query as { keyword?: string; status?: any };
-    const tickets = await ticketService.listTickets(filters);
+    const { keyword, status, tag } = req.query as { keyword?: string; status?: any; tag?: string };
+
+    let tagIds: string[] | undefined;
+    if (tag) {
+      tagIds = tag.split(',').filter(Boolean);
+      if (tagIds.length > 10) {
+        throw new ValidationError('Maximum 10 tag filter IDs');
+      }
+    }
+
+    const tickets = await ticketService.listTickets({ keyword, status, tagIds });
     res.json(tickets);
   } catch (err) {
     next(err);

@@ -205,6 +205,42 @@ async function main() {
   }
 
   console.log(`Seeded ${comments.length} comments`);
+
+  // ─── Tags (5) ────────────────────────────────────────────────────────────────
+  const tagNames = ['Bug', 'Feature Request', 'Performance', 'Documentation', 'Security'];
+
+  for (const name of tagNames) {
+    await prisma.tag.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+
+  console.log(`Seeded ${tagNames.length} tags`);
+
+  // ─── Tag-Ticket Associations ─────────────────────────────────────────────────
+  const tagAssociations: { ticketId: string; tagNames: string[] }[] = [
+    { ticketId: tickets[0].id, tagNames: ['Bug', 'Performance'] },       // Login page 500 error → 2 tags
+    { ticketId: tickets[2].id, tagNames: ['Performance'] },              // DB connection pool
+    { ticketId: tickets[3].id, tagNames: ['Feature Request'] },          // CSV export
+    { ticketId: tickets[10].id, tagNames: ['Security', 'Performance'] }, // API rate limiting → 2 tags
+  ];
+
+  let associationCount = 0;
+  for (const assoc of tagAssociations) {
+    await prisma.ticket.update({
+      where: { id: assoc.ticketId },
+      data: {
+        tags: {
+          connect: assoc.tagNames.map((name) => ({ name })),
+        },
+      },
+    });
+    associationCount += assoc.tagNames.length;
+  }
+
+  console.log(`Established ${associationCount} tag-ticket associations`);
   console.log('Seed complete!');
 }
 

@@ -22,6 +22,13 @@ export interface Comment {
   author: User;
 }
 
+// Tag (from GET /api/tags and included in ticket responses)
+export interface Tag {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 // Ticket (from list and detail responses)
 export interface Ticket {
   id: string;
@@ -36,6 +43,7 @@ export interface Ticket {
   validTransitions: Status[];
   creator: User;
   assignee: User | null;
+  tags: Tag[];
 }
 
 // Ticket with comments (from GET /api/tickets/:id)
@@ -71,6 +79,11 @@ export interface CreateCommentRequest {
 export interface TicketSearchParams {
   keyword?: string;
   status?: Status;
+  tag?: string;
+}
+
+export interface CreateTagRequest {
+  name: string;
 }
 
 // Error response shape (consistent across all endpoints)

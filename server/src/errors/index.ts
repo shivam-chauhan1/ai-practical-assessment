@@ -43,3 +43,11 @@ export class InvalidTransitionError extends AppError {
     Object.setPrototypeOf(this, InvalidTransitionError.prototype);
   }
 }
+
+export class ConflictError extends AppError {
+  constructor(message: string) {
+    super(409, 'CONFLICT', message);
+    this.name = 'ConflictError';
+    Object.setPrototypeOf(this, ConflictError.prototype);
+  }
+}

@@ -1,6 +1,6 @@
 import { PrismaClient, Status } from '@prisma/client';
-import { changeTicketStatus } from './ticketService';
-import { NotFoundError, InvalidTransitionError } from '../errors';
+import { changeTicketStatus } from '../src/services/ticketService';
+import { NotFoundError, InvalidTransitionError } from '../src/errors';
 
 const prisma = new PrismaClient();
 

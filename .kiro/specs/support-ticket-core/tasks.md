@@ -90,30 +90,30 @@ This plan implements a full-stack support ticket management system with an Expre
 - [x] 8. Checkpoint — Backend core complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ]* 9. State-machine property-based tests
-  - [ ]* 9.1 Write property test: Valid state-machine transitions succeed
+- [x] 9. State-machine property-based tests
+  - [x] 9.1 Write property test: Valid state-machine transitions succeed
     - **Property 3: Valid state-machine transitions succeed**
     - Generate all valid (from, to) pairs from VALID_TRANSITIONS map, assert isValidTransition returns true for each
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5**
-  - [ ]* 9.2 Write property test: Invalid state-machine transitions are rejected
+  - [x] 9.2 Write property test: Invalid state-machine transitions are rejected
     - **Property 4: Invalid state-machine transitions are rejected**
     - Generate all (from, to) pairs NOT in VALID_TRANSITIONS map, assert isValidTransition returns false for each
     - **Validates: Requirements 5.6**
-  - [ ]* 9.3 Write property test: Terminal-state tickets reject field updates
+  - [x] 9.3 Write property test: Terminal-state tickets reject field updates
     - **Property 5: Terminal-state tickets reject field updates with TICKET_LOCKED**
     - Use fast-check to generate random UpdateTicketInput on CLOSED/CANCELLED tickets, assert TicketLockedError is thrown
     - **Validates: Requirements 4.8, 11.1, 11.5**
-  - [ ]* 9.4 Write property test: Comments bypass terminal-state lock
+  - [x] 9.4 Write property test: Comments bypass terminal-state lock
     - **Property 6: Comments bypass terminal-state lock**
     - Use fast-check to generate random valid comment bodies on tickets in any status (including CLOSED/CANCELLED), assert comment is persisted successfully
     - **Validates: Requirements 6.1, 6.2, 11.2**
-  - [ ]* 9.5 Write property test: Created tickets always start in OPEN status
+  - [x] 9.5 Write property test: Created tickets always start in OPEN status
     - **Property 1: Created tickets always start in OPEN status**
     - Use fast-check to generate random valid CreateTicketInput, assert resulting ticket has status OPEN
     - **Validates: Requirements 1.1**
 
-- [ ]* 10. Backend API integration tests
-  - [ ]* 10.1 Write integration tests for ticket CRUD endpoints
+- [x] 10. Backend API integration tests
+  - [x] 10.1 Write integration tests for ticket CRUD endpoints
     - Test POST /api/tickets (success, validation errors, invalid references)
     - Test GET /api/tickets (list all, keyword search, status filter, combined filter)
     - Test GET /api/tickets/:id (success, 404)
@@ -122,26 +122,26 @@ This plan implements a full-stack support ticket management system with an Expre
     - **Property 2: Title length validation rejects out-of-bounds values**
     - **Property 8: Ticket list ordering**
     - **Validates: Requirements 1.1–1.6, 2.1, 3.1, 3.2, 4.1–4.8, 7.1–7.4, 9.1–9.5**
-  - [ ]* 10.2 Write integration tests for status-transition endpoint
+  - [x] 10.2 Write integration tests for status-transition endpoint
     - Test PATCH /api/tickets/:id/status for all valid transitions
     - Test invalid transitions return INVALID_TRANSITION error with valid options
     - Test invalid enum values return VALIDATION_ERROR
     - Test 404 for non-existent ticket
     - Verify error response shape consistency
     - **Validates: Requirements 5.1–5.7**
-  - [ ]* 10.3 Write integration tests for comment endpoint
+  - [x] 10.3 Write integration tests for comment endpoint
     - Test POST /api/tickets/:id/comments (success, validation errors, 404)
     - Test comments allowed on terminal-state tickets
     - **Property 7: Comment body length validation**
     - **Property 9: Comments ordered by creation time**
     - **Validates: Requirements 6.1–6.5, 11.2**
-  - [ ]* 10.4 Write property tests for search/filter correctness
+  - [x] 10.4 Write property tests for search/filter correctness
     - **Property 10: Keyword search returns only matching tickets**
     - **Property 11: Status filter returns only matching tickets**
     - **Property 12: Combined search filters apply as logical AND**
     - **Validates: Requirements 7.1, 7.2, 7.3**
 
-- [ ] 11. Checkpoint — Backend fully tested
+- [x] 11. Checkpoint — Backend fully tested
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 12. Frontend project setup
@@ -217,22 +217,22 @@ This plan implements a full-stack support ticket management system with an Expre
 - [x] 20. Checkpoint — Frontend complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ]* 21. Frontend component tests
-  - [ ]* 21.1 Write property test for StatusTransitionControls
+- [x] 21. Frontend component tests
+  - [x] 21.1 Write property test for StatusTransitionControls
     - **Property 13: Frontend shows only valid transitions for current status**
     - For each non-terminal status, assert component renders exactly the buttons defined in VALID_TRANSITIONS; for terminal statuses, assert no buttons rendered
     - **Validates: Requirements 5.8, 5.9**
-  - [ ]* 21.2 Write component tests for ErrorDisplay
+  - [x] 21.2 Write component tests for ErrorDisplay
     - Test rendering of each error code type (VALIDATION_ERROR with details, NOT_FOUND, TICKET_LOCKED, INVALID_TRANSITION, NETWORK_ERROR)
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
-  - [ ]* 21.3 Write component tests for TicketListPage
+  - [x] 21.3 Write component tests for TicketListPage
     - Test ticket list rendering, search interaction, filter interaction, empty state display, error state display
     - _Requirements: 2.2, 2.3, 7.5, 7.6_
-  - [ ]* 21.4 Write component tests for TicketDetailPage
+  - [x] 21.4 Write component tests for TicketDetailPage
     - Test detail rendering, comment display, comment form submission, 404 state, edit mode toggling, read-only fields on terminal tickets
     - _Requirements: 3.3, 3.4, 6.6, 11.3_
 
-- [ ] 22. Final checkpoint — All tests pass
+- [x] 22. Final checkpoint — All tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

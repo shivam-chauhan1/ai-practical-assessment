@@ -22,5 +22,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src", "tests/StatusTransitionControls.test.tsx", "tests/ErrorDisplay.test.tsx", "tests/TicketListPage.test.tsx", "tests/TicketDetailPage.test.tsx"]
 }

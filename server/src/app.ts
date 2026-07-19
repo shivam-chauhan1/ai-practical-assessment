@@ -1,15 +1,21 @@
 import express from 'express';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/authRoutes';
 import ticketRoutes from './routes/ticketRoutes';
 import userRoutes from './routes/userRoutes';
 import tagRoutes from './routes/tagRoutes';
 import { errorHandler } from './middleware/errorHandler';
+import { generateOpenApiDocument } from './openapi/generator';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Swagger UI - served without authentication
+const openApiDocument = generateOpenApiDocument();
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });

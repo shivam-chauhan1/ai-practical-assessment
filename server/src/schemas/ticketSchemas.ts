@@ -2,6 +2,10 @@ import { z } from 'zod';
 import { Priority, Status } from '@prisma/client';
 import { tagIdsArraySchema } from './tagSchemas';
 
+export const uuidParamSchema = z.object({
+  id: z.string().uuid('id must be a valid UUID'),
+});
+
 export const createTicketSchema = z.object({
   title: z.string().trim().min(3, 'Title must be at least 3 characters').max(200, 'Title must be at most 200 characters'),
   description: z.string().trim().min(1, 'Description is required').max(5000, 'Description must be at most 5000 characters'),

@@ -99,7 +99,7 @@ describe('Auth Integration: Full Login Flow', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
 
-    expect(Array.isArray(ticketsRes.body)).toBe(true);
+    expect(Array.isArray(ticketsRes.body.data)).toBe(true);
   });
 });
 
@@ -191,7 +191,7 @@ describe('Auth Integration: AGENT role permissions', () => {
       .set('Authorization', `Bearer ${agentToken}`)
       .expect(200);
 
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 
   it('AGENT can POST /api/tickets (create ticket)', async () => {
@@ -301,7 +301,7 @@ describe('Auth Integration: ADMIN role permissions', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    expect(Array.isArray(res.body)).toBe(true);
+    expect(Array.isArray(res.body.data)).toBe(true);
   });
 
   it('ADMIN can POST /api/tickets (create ticket)', async () => {

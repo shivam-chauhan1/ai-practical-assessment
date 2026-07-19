@@ -256,7 +256,7 @@ describe('GET /api/tickets includes tags in list', () => {
       .expect(200);
 
     // Find our test ticket
-    const testTicket = res.body.find((t: any) => t.title === 'Listed ticket with tags');
+    const testTicket = res.body.data.find((t: any) => t.title === 'Listed ticket with tags');
     expect(testTicket).toBeDefined();
     expect(testTicket.tags).toBeDefined();
     expect(testTicket.tags).toHaveLength(1);
@@ -311,7 +311,7 @@ describe('GET /api/tickets includes tags in list', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
-    const titles = res.body.map((t: any) => t.title);
+    const titles = res.body.data.map((t: any) => t.title);
     expect(titles).toContain('Tag filter OR test A');
     expect(titles).toContain('Tag filter OR test B');
     expect(titles).not.toContain('Tag filter OR test C');

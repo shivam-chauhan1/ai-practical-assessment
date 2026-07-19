@@ -14,6 +14,11 @@ vi.mock('../src/api/tags', () => ({
   listTags: vi.fn().mockResolvedValue([]),
 }));
 
+// Mock the users API module (used by assignedTo filter)
+vi.mock('../src/api/users', () => ({
+  listUsers: vi.fn().mockResolvedValue([]),
+}));
+
 // Mock useDebounce to return the value immediately (no delay)
 vi.mock('../src/hooks/useDebounce', () => ({
   useDebounce: (value: unknown) => value,
@@ -60,7 +65,7 @@ describe('TicketListPage', () => {
   });
 
   it('renders ticket cards after successful fetch', async () => {
-    mockListTickets.mockResolvedValue([mockTicket]);
+    mockListTickets.mockResolvedValue({ data: [mockTicket], pagination: { page: 1, pageSize: 10, total: 1, totalPages: 1 } });
     renderPage();
     await waitFor(() => {
       expect(screen.getByText('Test Ticket')).toBeInTheDocument();
@@ -69,7 +74,7 @@ describe('TicketListPage', () => {
   });
 
   it('renders empty state when API returns empty array', async () => {
-    mockListTickets.mockResolvedValue([]);
+    mockListTickets.mockResolvedValue({ data: [], pagination: { page: 1, pageSize: 10, total: 0, totalPages: 0 } });
     renderPage();
     await waitFor(() => {
       expect(screen.getByText('No tickets found.')).toBeInTheDocument();
@@ -87,7 +92,7 @@ describe('TicketListPage', () => {
   });
 
   it('search input triggers refetch with keyword', async () => {
-    mockListTickets.mockResolvedValue([mockTicket]);
+    mockListTickets.mockResolvedValue({ data: [mockTicket], pagination: { page: 1, pageSize: 10, total: 1, totalPages: 1 } });
     renderPage();
 
     // Wait for initial load
@@ -101,12 +106,14 @@ describe('TicketListPage', () => {
 
     // Since useDebounce is mocked to return immediately, listTickets should be called with keyword
     await waitFor(() => {
-      expect(mockListTickets).toHaveBeenCalledWith({ keyword: 'bug' });
+      expect(mockListTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ keyword: 'bug', page: 1, pageSize: 10, sortBy: 'updatedAt', sortOrder: 'desc' })
+      );
     });
   });
 
   it('status filter triggers refetch with status', async () => {
-    mockListTickets.mockResolvedValue([mockTicket]);
+    mockListTickets.mockResolvedValue({ data: [mockTicket], pagination: { page: 1, pageSize: 10, total: 1, totalPages: 1 } });
     renderPage();
 
     // Wait for initial load
@@ -120,7 +127,45 @@ describe('TicketListPage', () => {
 
     // listTickets should be called with status filter
     await waitFor(() => {
-      expect(mockListTickets).toHaveBeenCalledWith({ status: 'OPEN' });
+      expect(mockListTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'OPEN', page: 1, pageSize: 10, sortBy: 'updatedAt', sortOrder: 'desc' })
+      );
+    });
+  });
+
+  it('priority filter triggers refetch with priority', async () => {
+    mockListTickets.mockResolvedValue({ data: [mockTicket], pagination: { page: 1, pageSize: 10, total: 1, totalPages: 1 } });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Ticket')).toBeInTheDocument();
+    });
+
+    const prioritySelect = screen.getByLabelText('Filter by priority');
+    fireEvent.change(prioritySelect, { target: { value: 'HIGH' } });
+
+    await waitFor(() => {
+      expect(mockListTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ priority: 'HIGH', page: 1, pageSize: 10 })
+      );
+    });
+  });
+
+  it('sort control triggers refetch with sort params', async () => {
+    mockListTickets.mockResolvedValue({ data: [mockTicket], pagination: { page: 1, pageSize: 10, total: 1, totalPages: 1 } });
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Test Ticket')).toBeInTheDocument();
+    });
+
+    const sortSelect = screen.getByLabelText('Sort tickets');
+    fireEvent.change(sortSelect, { target: { value: 'priority-desc' } });
+
+    await waitFor(() => {
+      expect(mockListTickets).toHaveBeenCalledWith(
+        expect.objectContaining({ sortBy: 'priority', sortOrder: 'desc', page: 1, pageSize: 10 })
+      );
     });
   });
 });

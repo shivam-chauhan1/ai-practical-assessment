@@ -19,12 +19,14 @@ jest.mock('@prisma/client', () => {
       findUnique: jest.fn(),
       findMany: jest.fn(),
       update: jest.fn(),
+      count: jest.fn(),
     },
     tag: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
       delete: jest.fn(),
     },
+    $transaction: jest.fn(),
   };
 
   return {
@@ -102,13 +104,18 @@ describe('Ticket-Tag Filtering - Property Tests', () => {
             tags: [], // Tag removed from join table by cascading delete
           }));
 
-          mockPrisma.ticket.findMany.mockResolvedValue(ticketsAfterDeletion);
+          mockPrisma.$transaction.mockResolvedValue([ticketsAfterDeletion, ticketsAfterDeletion.length]);
 
-          const result = await listTickets();
+          const result = await listTickets({
+            sortBy: 'updatedAt',
+            sortOrder: 'desc',
+            page: 1,
+            pageSize: 20,
+          });
 
           // All tickets still exist and are retrievable
-          expect(result).toHaveLength(ticketCount);
-          result.forEach((ticket: any) => {
+          expect(result.data).toHaveLength(ticketCount);
+          result.data.forEach((ticket: any) => {
             expect(ticket.id).toBeDefined();
             expect(ticket.title).toBeDefined();
             // The deleted tag is no longer associated
@@ -393,12 +400,12 @@ describe('Ticket-Tag Filtering - Property Tests', () => {
           const matchingTickets = tickets.filter(t =>
             t.tags.some(tag => filterTagIds.includes(tag.id))
           );
-          mockPrisma.ticket.findMany.mockResolvedValue(matchingTickets);
+          mockPrisma.$transaction.mockResolvedValue([matchingTickets, matchingTickets.length]);
 
-          const result = await listTickets({ tagIds: filterTagIds });
+          const result = await listTickets({ tagIds: filterTagIds, sortBy: 'updatedAt', sortOrder: 'desc', page: 1, pageSize: 20 });
 
           // Every returned ticket must have at least one tag in the filter set
-          result.forEach((ticket: any) => {
+          result.data.forEach((ticket: any) => {
             const hasMatchingTag = ticket.tags.some((tag: any) =>
               filterTagIds.includes(tag.id)
             );
@@ -458,9 +465,9 @@ describe('Ticket-Tag Filtering - Property Tests', () => {
             },
           ];
 
-          mockPrisma.ticket.findMany.mockResolvedValue(matchingTickets);
+          mockPrisma.$transaction.mockResolvedValue([matchingTickets, matchingTickets.length]);
 
-          const result = await listTickets({ keyword, status, tagIds: filterTagIds });
+          const result = await listTickets({ keyword, status, tagIds: filterTagIds, sortBy: 'updatedAt', sortOrder: 'desc', page: 1, pageSize: 20 });
 
           // Verify Prisma was called with all filters in AND composition
           expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
@@ -477,7 +484,7 @@ describe('Ticket-Tag Filtering - Property Tests', () => {
           );
 
           // All filters coexist at the top level — Prisma treats this as AND
-          expect(result).toHaveLength(1);
+          expect(result.data).toHaveLength(1);
         }
       ),
       { numRuns: 100 }
@@ -525,10 +532,10 @@ describe('Ticket-Tag Filtering - Property Tests', () => {
           }));
 
           // Mock findMany — Prisma's `in` clause naturally ignores non-existent IDs
-          mockPrisma.ticket.findMany.mockResolvedValue(matchingTickets);
+          mockPrisma.$transaction.mockResolvedValue([matchingTickets, matchingTickets.length]);
 
           // Filter with mix of valid + non-existent IDs
-          const result = await listTickets({ tagIds: allFilterIds });
+          const result = await listTickets({ tagIds: allFilterIds, sortBy: 'updatedAt', sortOrder: 'desc', page: 1, pageSize: 20 });
 
           // Verify the service passes ALL filter IDs (including non-existent) to Prisma
           // Prisma's `in` will simply not match the non-existent ones
@@ -541,11 +548,11 @@ describe('Ticket-Tag Filtering - Property Tests', () => {
           );
 
           // The results include tickets that match valid tag IDs
-          expect(result).toHaveLength(ticketCount);
+          expect(result.data).toHaveLength(ticketCount);
 
           // Non-existent IDs do NOT cause errors or empty results
           // They are simply ignored at the database level
-          result.forEach((ticket: any) => {
+          result.data.forEach((ticket: any) => {
             const hasValidTag = ticket.tags.some((tag: any) =>
               validTagIds.includes(tag.id)
             );

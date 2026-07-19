@@ -82,6 +82,25 @@ export interface TicketSearchParams {
   tag?: string;
 }
 
+export interface TicketListParams extends TicketSearchParams {
+  priority?: Priority;
+  assignedTo?: string;
+  sortBy?: 'updatedAt' | 'priority';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+}
+
+export interface PaginatedTicketsResponse {
+  data: Ticket[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export interface CreateTagRequest {
   name: string;
 }

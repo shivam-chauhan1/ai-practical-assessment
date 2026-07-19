@@ -109,7 +109,7 @@ describe('GET /api/tickets', () => {
       .expect(200);
 
     // Find our test tickets in the response
-    const testTickets = res.body.filter((t: any) => t.createdBy === TEST_USER_ID);
+    const testTickets = res.body.data.filter((t: any) => t.createdBy === TEST_USER_ID);
     expect(testTickets.length).toBe(2);
     // Most recently updated should be first
     expect(new Date(testTickets[0].updatedAt).getTime())
@@ -129,8 +129,8 @@ describe('GET /api/tickets', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
-    expect(res.body.length).toBeGreaterThanOrEqual(1);
-    expect(res.body.every((t: any) =>
+    expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.data.every((t: any) =>
       t.title.toLowerCase().includes('uniquekeywordxyz') ||
       t.description.toLowerCase().includes('uniquekeywordxyz')
     )).toBe(true);
@@ -149,7 +149,7 @@ describe('GET /api/tickets', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
-    expect(res.body.every((t: any) => t.status === 'RESOLVED')).toBe(true);
+    expect(res.body.data.every((t: any) => t.status === 'RESOLVED')).toBe(true);
   });
 
   it('combines keyword + status filter (AND logic)', async () => {
@@ -165,9 +165,9 @@ describe('GET /api/tickets', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
-    expect(res.body.length).toBe(1);
-    expect(res.body[0].status).toBe('IN_PROGRESS');
-    expect(res.body[0].title).toContain('CombinedTestAlpha');
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0].status).toBe('IN_PROGRESS');
+    expect(res.body.data[0].title).toContain('CombinedTestAlpha');
   });
 });
 

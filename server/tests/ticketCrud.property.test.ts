@@ -220,7 +220,7 @@ describe('Property 8: Ticket list ordering', () => {
           expect(res.status).toBe(200);
 
           // Filter only our test tickets
-          const testTickets = res.body.filter((t: any) => t.createdBy === TEST_USER_ID);
+          const testTickets = res.body.data.filter((t: any) => t.createdBy === TEST_USER_ID);
           expect(testTickets.length).toBe(ticketInputs.length);
 
           // Verify ordering: each ticket's updatedAt should be >= next ticket's updatedAt
@@ -270,7 +270,7 @@ describe('Property 8: Ticket list ordering', () => {
           const res = await request(app).get('/api/tickets').set('Authorization', `Bearer ${authToken}`);
           expect(res.status).toBe(200);
 
-          const testTickets = res.body.filter((t: any) => t.createdBy === TEST_USER_ID);
+          const testTickets = res.body.data.filter((t: any) => t.createdBy === TEST_USER_ID);
           expect(testTickets.length).toBe(3);
 
           // The updated ticket should appear first (most recent updatedAt)

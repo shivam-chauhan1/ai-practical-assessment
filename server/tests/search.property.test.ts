@@ -88,7 +88,7 @@ describe('Search/Filter Property Tests', () => {
             .set('Authorization', `Bearer ${authToken}`)
             .expect(200);
 
-          const results: any[] = res.body;
+          const results: any[] = res.body.data;
 
           // All results must contain the keyword in title or description (case-insensitive)
           const keywordLower = keyword.toLowerCase();
@@ -161,7 +161,7 @@ describe('Search/Filter Property Tests', () => {
             .set('Authorization', `Bearer ${authToken}`)
             .expect(200);
 
-          const results: any[] = res.body;
+          const results: any[] = res.body.data;
 
           // ALL results must have the filtered status
           for (const ticket of results) {
@@ -255,7 +255,7 @@ describe('Search/Filter Property Tests', () => {
             .set('Authorization', `Bearer ${authToken}`)
             .expect(200);
 
-          const results: any[] = res.body;
+          const results: any[] = res.body.data;
 
           // All results must match BOTH conditions
           const keywordLower = keyword.toLowerCase();

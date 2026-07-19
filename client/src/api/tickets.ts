@@ -5,7 +5,8 @@ import type {
   CreateTicketRequest,
   UpdateTicketRequest,
   ChangeStatusRequest,
-  TicketSearchParams,
+  TicketListParams,
+  PaginatedTicketsResponse,
 } from './types';
 
 export async function createTicket(data: CreateTicketRequest): Promise<Ticket> {
@@ -15,13 +16,19 @@ export async function createTicket(data: CreateTicketRequest): Promise<Ticket> {
   });
 }
 
-export async function listTickets(params?: TicketSearchParams): Promise<Ticket[]> {
+export async function listTickets(params?: TicketListParams): Promise<PaginatedTicketsResponse> {
   const searchParams = new URLSearchParams();
   if (params?.keyword) searchParams.set('keyword', params.keyword);
   if (params?.status) searchParams.set('status', params.status);
   if (params?.tag) searchParams.set('tag', params.tag);
+  if (params?.priority) searchParams.set('priority', params.priority);
+  if (params?.assignedTo) searchParams.set('assignedTo', params.assignedTo);
+  if (params?.sortBy) searchParams.set('sortBy', params.sortBy);
+  if (params?.sortOrder) searchParams.set('sortOrder', params.sortOrder);
+  if (params?.page) searchParams.set('page', String(params.page));
+  if (params?.pageSize) searchParams.set('pageSize', String(params.pageSize));
   const query = searchParams.toString();
-  return apiRequest<Ticket[]>(`/tickets${query ? `?${query}` : ''}`);
+  return apiRequest<PaginatedTicketsResponse>(`/tickets${query ? `?${query}` : ''}`);
 }
 
 export async function getTicket(id: string): Promise<TicketWithComments> {

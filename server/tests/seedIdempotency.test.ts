@@ -69,7 +69,7 @@ describe('Seed Idempotency', () => {
   });
 
   it('Property 13: running seed twice produces identical state to running it once', async () => {
-    // First execution
+    // First execution - run the seed
     runSeed();
     const stateAfterFirstRun = await captureDbState();
 
@@ -90,7 +90,9 @@ describe('Seed Idempotency', () => {
     // Tag-ticket associations should be identical
     expect(stateAfterSecondRun.ticketsWithTags).toEqual(stateAfterFirstRun.ticketsWithTags);
 
-    // Other entity counts should also be identical (users, tickets, comments)
+    // User count, ticket count, and comment count should be identical between runs
+    // Note: other parallel tests may create/delete users, so we compare between the two seed runs
+    // which should be deterministic since the seed uses upsert
     expect(stateAfterSecondRun.userCount).toBe(stateAfterFirstRun.userCount);
     expect(stateAfterSecondRun.ticketCount).toBe(stateAfterFirstRun.ticketCount);
     expect(stateAfterSecondRun.commentCount).toBe(stateAfterFirstRun.commentCount);

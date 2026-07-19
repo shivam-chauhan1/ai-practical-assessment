@@ -1,11 +1,14 @@
 import request from 'supertest';
 import { PrismaClient, Status } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 
 const prisma = new PrismaClient();
 
 // Stable test user ID
 const TEST_USER_ID = 'test-user-0000-0000-000000000001';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-that-is-at-least-32-characters-long';
+const authToken = jwt.sign({ id: TEST_USER_ID, email: 'testuser@test.local', role: 'ADMIN' }, JWT_SECRET, { expiresIn: '1h' });
 
 // Helper: create a ticket in a specific status
 async function createTicketInStatus(status: Status): Promise<string> {
@@ -32,6 +35,7 @@ beforeAll(async () => {
       name: 'Test User',
       email: 'testuser@test.local',
       role: 'AGENT',
+      password: '$2b$10$dummyhashedpasswordfortest1234567890abc',
     },
   });
 });
@@ -59,7 +63,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/status`)
-        .send({ status: 'IN_PROGRESS' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'IN_PROGRESS' })
         .expect(200);
 
       expect(res.body.status).toBe('IN_PROGRESS');
@@ -77,7 +82,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/status`)
-        .send({ status: 'RESOLVED' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'RESOLVED' })
         .expect(200);
 
       expect(res.body.status).toBe('RESOLVED');
@@ -91,7 +97,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/status`)
-        .send({ status: 'CLOSED' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'CLOSED' })
         .expect(200);
 
       expect(res.body.status).toBe('CLOSED');
@@ -106,7 +113,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/status`)
-        .send({ status: 'CANCELLED' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'CANCELLED' })
         .expect(200);
 
       expect(res.body.status).toBe('CANCELLED');
@@ -121,7 +129,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/status`)
-        .send({ status: 'CANCELLED' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'CANCELLED' })
         .expect(200);
 
       expect(res.body.status).toBe('CANCELLED');
@@ -159,7 +168,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
         const res = await request(app)
           .patch(`/api/tickets/${ticketId}/status`)
-          .send({ status: to })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: to })
           .expect(400);
 
         expect(res.body.error.code).toBe('INVALID_TRANSITION');
@@ -182,7 +192,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/status`)
-        .send({ status: 'BOGUS_STATUS' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'BOGUS_STATUS' })
         .expect(400);
 
       expect(res.body.error.code).toBe('VALIDATION_ERROR');
@@ -199,7 +210,8 @@ describe('PATCH /api/tickets/:id/status', () => {
     it('returns 404 NOT_FOUND for a missing ticket ID', async () => {
       const res = await request(app)
         .patch('/api/tickets/00000000-0000-0000-0000-000000000000/status')
-        .send({ status: 'IN_PROGRESS' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'IN_PROGRESS' })
         .expect(404);
 
       expect(res.body.error.code).toBe('NOT_FOUND');
@@ -214,7 +226,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/status`)
-        .send({ status: 'RESOLVED' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'RESOLVED' })
         .expect(400);
 
       // Verify top-level shape
@@ -234,7 +247,8 @@ describe('PATCH /api/tickets/:id/status', () => {
 
       const res = await request(app)
         .patch(`/api/tickets/${ticketId}/status`)
-        .send({ status: 'BOGUS_STATUS' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'BOGUS_STATUS' })
         .expect(400);
 
       // Verify top-level shape
@@ -255,7 +269,8 @@ describe('PATCH /api/tickets/:id/status', () => {
     it('NOT_FOUND error has shape { error: { code, message } }', async () => {
       const res = await request(app)
         .patch('/api/tickets/00000000-0000-0000-0000-000000000000/status')
-        .send({ status: 'IN_PROGRESS' })
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({ status: 'IN_PROGRESS' })
         .expect(404);
 
       // Verify top-level shape

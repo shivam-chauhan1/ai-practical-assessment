@@ -51,3 +51,19 @@ export class ConflictError extends AppError {
     Object.setPrototypeOf(this, ConflictError.prototype);
   }
 }
+
+export class AuthenticationError extends AppError {
+  constructor(message: string = 'Invalid email or password') {
+    super(401, 'AUTHENTICATION_ERROR', message);
+    this.name = 'AuthenticationError';
+    Object.setPrototypeOf(this, AuthenticationError.prototype);
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message: string = 'Insufficient permissions') {
+    super(403, 'FORBIDDEN', message);
+    this.name = 'ForbiddenError';
+    Object.setPrototypeOf(this, ForbiddenError.prototype);
+  }
+}

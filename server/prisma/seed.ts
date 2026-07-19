@@ -1,6 +1,10 @@
 import { PrismaClient, Role, Status, Priority } from '@prisma/client';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
+
+const DEFAULT_DEV_PASSWORD = 'password123';
+const BCRYPT_COST_FACTOR = 10;
 
 async function main() {
   // ─── Users (5) ───────────────────────────────────────────────────────────────
@@ -13,10 +17,18 @@ async function main() {
   ];
 
   for (const user of users) {
+    let hashedPassword: string;
+    try {
+      hashedPassword = await bcrypt.hash(DEFAULT_DEV_PASSWORD, BCRYPT_COST_FACTOR);
+    } catch (error) {
+      console.error(`Failed to hash password for user "${user.name}" (${user.email}):`, error);
+      process.exit(1);
+    }
+
     await prisma.user.upsert({
       where: { id: user.id },
       update: {},
-      create: user,
+      create: { ...user, password: hashedPassword },
     });
   }
 

@@ -32,6 +32,7 @@ model User {
   name           String
   email          String    @unique
   role           Role
+  password       String    @db.VarChar(72)
   createdAt      DateTime  @default(now())
 
   createdTickets Ticket[]  @relation("CreatedBy")

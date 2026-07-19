@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import authRoutes from './routes/authRoutes';
 import ticketRoutes from './routes/ticketRoutes';
 import userRoutes from './routes/userRoutes';
 import tagRoutes from './routes/tagRoutes';
@@ -14,6 +15,7 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
+app.use('/api', authRoutes);
 app.use('/api', ticketRoutes);
 app.use('/api', userRoutes);
 app.use('/api', tagRoutes);

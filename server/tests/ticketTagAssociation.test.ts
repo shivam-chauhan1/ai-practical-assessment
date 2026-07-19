@@ -1,11 +1,14 @@
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 
 const prisma = new PrismaClient();
 
-const TEST_USER_ID = 'd0000000-0000-4000-a000-000000000001';
+const TEST_USER_ID = 'd0000000-0000-4000-a000-000000000031';
 const TAG_PREFIX = 'ttagtest';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-that-is-at-least-32-characters-long';
+const authToken = jwt.sign({ id: TEST_USER_ID, email: 'tagassoc@test.local', role: 'ADMIN' }, JWT_SECRET, { expiresIn: '1h' });
 
 let testTag1Id: string;
 let testTag2Id: string;
@@ -16,7 +19,7 @@ beforeAll(async () => {
   await prisma.user.upsert({
     where: { id: TEST_USER_ID },
     update: {},
-    create: { id: TEST_USER_ID, name: 'TagAssoc Test User', email: 'tagassoc@test.local', role: 'AGENT' },
+    create: { id: TEST_USER_ID, name: 'TagAssoc Test User', email: 'tagassoc@test.local', role: 'AGENT', password: '$2b$10$dummyhashedpasswordfortest1234567890abc' },
   });
 
   // Create test tags
@@ -47,6 +50,7 @@ describe('POST /api/tickets with tags', () => {
   it('creates a ticket with tags and returns 201 with tags included', async () => {
     const res = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Ticket with tags',
         description: 'Testing tag association on create',
@@ -73,6 +77,7 @@ describe('POST /api/tickets with tags', () => {
     const fakeId = '00000000-0000-4000-a000-000000000099';
     const res = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Ticket with bad tags',
         description: 'Should fail validation',
@@ -98,6 +103,7 @@ describe('POST /api/tickets with tags', () => {
 
     const res = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Too many tags ticket',
         description: 'Should fail with max tags',
@@ -116,6 +122,7 @@ describe('PATCH /api/tickets/:id with tags (replace semantics)', () => {
     // Create ticket with tag1 and tag2
     const createRes = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Replace tags test',
         description: 'Will have tags replaced',
@@ -130,6 +137,7 @@ describe('PATCH /api/tickets/:id with tags (replace semantics)', () => {
     // Update with only tag3 — should replace previous tags
     const updateRes = await request(app)
       .patch(`/api/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ tags: [testTag3Id] })
       .expect(200);
 
@@ -141,6 +149,7 @@ describe('PATCH /api/tickets/:id with tags (replace semantics)', () => {
     // Create ticket with tags
     const createRes = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Remove all tags test',
         description: 'Tags will be cleared',
@@ -155,6 +164,7 @@ describe('PATCH /api/tickets/:id with tags (replace semantics)', () => {
     // Update with empty tags array
     const updateRes = await request(app)
       .patch(`/api/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ tags: [] })
       .expect(200);
 
@@ -165,6 +175,7 @@ describe('PATCH /api/tickets/:id with tags (replace semantics)', () => {
     // Create ticket with tags
     const createRes = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Preserve tags test',
         description: 'Tags should stay',
@@ -179,6 +190,7 @@ describe('PATCH /api/tickets/:id with tags (replace semantics)', () => {
     // Update without tags field — only change title
     const updateRes = await request(app)
       .patch(`/api/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ title: 'Updated title only' })
       .expect(200);
 
@@ -194,6 +206,7 @@ describe('GET /api/tickets/:id includes tags', () => {
   it('returns ticket with tags array containing tag objects', async () => {
     const createRes = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Get single with tags',
         description: 'Should include tags on GET',
@@ -207,6 +220,7 @@ describe('GET /api/tickets/:id includes tags', () => {
 
     const getRes = await request(app)
       .get(`/api/tickets/${ticketId}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     expect(getRes.body.tags).toHaveLength(2);
@@ -226,6 +240,7 @@ describe('GET /api/tickets includes tags in list', () => {
     // Create a ticket with tags
     await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Listed ticket with tags',
         description: 'Should appear in list with tags',
@@ -237,6 +252,7 @@ describe('GET /api/tickets includes tags in list', () => {
 
     const res = await request(app)
       .get('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     // Find our test ticket
@@ -253,6 +269,7 @@ describe('GET /api/tickets includes tags in list', () => {
     // Create ticket with tag1 only
     await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Tag filter OR test A',
         description: 'Has tag1',
@@ -265,6 +282,7 @@ describe('GET /api/tickets includes tags in list', () => {
     // Create ticket with tag2 only
     await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Tag filter OR test B',
         description: 'Has tag2',
@@ -277,6 +295,7 @@ describe('GET /api/tickets includes tags in list', () => {
     // Create ticket with tag3 only (should NOT appear)
     await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Tag filter OR test C',
         description: 'Has tag3 only',
@@ -289,6 +308,7 @@ describe('GET /api/tickets includes tags in list', () => {
     // Filter by tag1,tag2 — should return tickets A and B (OR logic)
     const res = await request(app)
       .get(`/api/tickets?tag=${testTag1Id},${testTag2Id}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     const titles = res.body.map((t: any) => t.title);

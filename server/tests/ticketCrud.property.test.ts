@@ -1,17 +1,20 @@
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
 import fc from 'fast-check';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 
 const prisma = new PrismaClient();
 
 const TEST_USER_ID = 'c0000000-0000-4000-a000-000000000010';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-that-is-at-least-32-characters-long';
+const authToken = jwt.sign({ id: TEST_USER_ID, email: 'proptest@test.local', role: 'AGENT' }, JWT_SECRET, { expiresIn: '1h' });
 
 beforeAll(async () => {
   await prisma.user.upsert({
     where: { id: TEST_USER_ID },
     update: {},
-    create: { id: TEST_USER_ID, name: 'Property Test User', email: 'proptest@test.local', role: 'AGENT' },
+    create: { id: TEST_USER_ID, name: 'Property Test User', email: 'proptest@test.local', role: 'AGENT', password: '$2b$10$dummyhashedpasswordfortest1234567890abc' },
   });
 });
 
@@ -54,6 +57,7 @@ describe('Property 2: Title length validation rejects out-of-bounds values', () 
         async (shortTitle) => {
           const res = await request(app)
             .post('/api/tickets')
+            .set('Authorization', `Bearer ${authToken}`)
             .send({
               title: shortTitle,
               description: 'A valid description',
@@ -83,6 +87,7 @@ describe('Property 2: Title length validation rejects out-of-bounds values', () 
         async (longTitle) => {
           const res = await request(app)
             .post('/api/tickets')
+            .set('Authorization', `Bearer ${authToken}`)
             .send({
               title: longTitle,
               description: 'A valid description',
@@ -124,6 +129,7 @@ describe('Property 2: Title length validation rejects out-of-bounds values', () 
         async (shortTitle) => {
           const res = await request(app)
             .patch(`/api/tickets/${ticket.id}`)
+            .set('Authorization', `Bearer ${authToken}`)
             .send({ title: shortTitle });
 
           expect(res.status).toBe(400);
@@ -153,6 +159,7 @@ describe('Property 2: Title length validation rejects out-of-bounds values', () 
         async (longTitle) => {
           const res = await request(app)
             .patch(`/api/tickets/${ticket.id}`)
+            .set('Authorization', `Bearer ${authToken}`)
             .send({ title: longTitle });
 
           expect(res.status).toBe(400);
@@ -208,7 +215,7 @@ describe('Property 8: Ticket list ordering', () => {
             await new Promise(r => setTimeout(r, 20));
           }
 
-          const res = await request(app).get('/api/tickets');
+          const res = await request(app).get('/api/tickets').set('Authorization', `Bearer ${authToken}`);
 
           expect(res.status).toBe(200);
 
@@ -260,7 +267,7 @@ describe('Property 8: Ticket list ordering', () => {
             data: { priority: newPriority as any },
           });
 
-          const res = await request(app).get('/api/tickets');
+          const res = await request(app).get('/api/tickets').set('Authorization', `Bearer ${authToken}`);
           expect(res.status).toBe(200);
 
           const testTickets = res.body.filter((t: any) => t.createdBy === TEST_USER_ID);

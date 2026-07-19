@@ -15,6 +15,7 @@ describe('changeTicketStatus', () => {
         name: 'Test User Status',
         email: `statustest-${Date.now()}@example.com`,
         role: 'AGENT',
+        password: '$2b$10$dummyhashedpasswordfortest1234567890abc',
       },
     });
     testUserId = user.id;

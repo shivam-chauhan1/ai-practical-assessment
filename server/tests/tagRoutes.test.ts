@@ -1,8 +1,12 @@
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 
 const prisma = new PrismaClient();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-that-is-at-least-32-characters-long';
+const authToken = jwt.sign({ id: 'test-tag-user-001', email: 'tagroutes@test.local', role: 'ADMIN' }, JWT_SECRET, { expiresIn: '1h' });
 
 beforeAll(async () => {
   await prisma.tag.deleteMany({});
@@ -20,6 +24,7 @@ describe('POST /api/tags', () => {
   it('creates a tag with valid name and returns 201 with id, name, createdAt', async () => {
     const res = await request(app)
       .post('/api/tags')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ name: 'Bug' })
       .expect(201);
 
@@ -31,11 +36,13 @@ describe('POST /api/tags', () => {
   it('returns 409 when creating a tag with a duplicate name (case-insensitive)', async () => {
     await request(app)
       .post('/api/tags')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ name: 'Feature' })
       .expect(201);
 
     const res = await request(app)
       .post('/api/tags')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ name: 'feature' })
       .expect(409);
 
@@ -46,6 +53,7 @@ describe('POST /api/tags', () => {
   it('returns 400 with VALIDATION_ERROR when name is empty', async () => {
     const res = await request(app)
       .post('/api/tags')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ name: '' })
       .expect(400);
 
@@ -56,6 +64,7 @@ describe('POST /api/tags', () => {
     const longName = 'a'.repeat(51);
     const res = await request(app)
       .post('/api/tags')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ name: longName })
       .expect(400);
 
@@ -65,6 +74,7 @@ describe('POST /api/tags', () => {
   it('returns 400 when name is only whitespace', async () => {
     const res = await request(app)
       .post('/api/tags')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ name: '   ' })
       .expect(400);
 
@@ -85,6 +95,7 @@ describe('GET /api/tags', () => {
 
     const res = await request(app)
       .get('/api/tags')
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     expect(res.body).toHaveLength(3);
@@ -100,6 +111,7 @@ describe('DELETE /api/tags/:id', () => {
 
     await request(app)
       .delete(`/api/tags/${tag.id}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(204);
 
     // Verify it's actually gone
@@ -112,6 +124,7 @@ describe('DELETE /api/tags/:id', () => {
 
     const res = await request(app)
       .delete(`/api/tags/${nonExistentId}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(404);
 
     expect(res.body.error.code).toBe('NOT_FOUND');
@@ -120,6 +133,7 @@ describe('DELETE /api/tags/:id', () => {
   it('returns 400 when deleting with an invalid UUID format', async () => {
     const res = await request(app)
       .delete('/api/tags/not-a-valid-uuid')
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(400);
 
     expect(res.body.error.code).toBe('VALIDATION_ERROR');

@@ -1,18 +1,21 @@
 import fc from 'fast-check';
 import request from 'supertest';
 import { PrismaClient, Status } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
-const TEST_USER_ID = 'd0000000-0000-4000-a000-000000000001';
+const TEST_USER_ID = 'd0000000-0000-4000-a000-000000000021';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-that-is-at-least-32-characters-long';
+const authToken = jwt.sign({ id: TEST_USER_ID, email: 'searchtest@test.local', role: 'AGENT' }, JWT_SECRET, { expiresIn: '1h' });
 
 beforeAll(async () => {
   await prisma.user.upsert({
     where: { id: TEST_USER_ID },
     update: {},
-    create: { id: TEST_USER_ID, name: 'Search Test User', email: 'searchtest@test.local', role: 'AGENT' },
+    create: { id: TEST_USER_ID, name: 'Search Test User', email: 'searchtest@test.local', role: 'AGENT', password: '$2b$10$dummyhashedpasswordfortest1234567890abc' },
   });
 });
 
@@ -82,6 +85,7 @@ describe('Search/Filter Property Tests', () => {
           // Query the API with the keyword
           const res = await request(app)
             .get(`/api/tickets?keyword=${encodeURIComponent(keyword)}`)
+            .set('Authorization', `Bearer ${authToken}`)
             .expect(200);
 
           const results: any[] = res.body;
@@ -154,6 +158,7 @@ describe('Search/Filter Property Tests', () => {
           // Query with status filter
           const res = await request(app)
             .get(`/api/tickets?status=${filterStatus}`)
+            .set('Authorization', `Bearer ${authToken}`)
             .expect(200);
 
           const results: any[] = res.body;
@@ -247,6 +252,7 @@ describe('Search/Filter Property Tests', () => {
           // Query with both keyword and status
           const res = await request(app)
             .get(`/api/tickets?keyword=${encodeURIComponent(keyword)}&status=${filterStatus}`)
+            .set('Authorization', `Bearer ${authToken}`)
             .expect(200);
 
           const results: any[] = res.body;

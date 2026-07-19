@@ -1,23 +1,26 @@
 import request from 'supertest';
 import { PrismaClient, Status } from '@prisma/client';
 import fc from 'fast-check';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 
 const prisma = new PrismaClient();
 
-const TEST_USER_ID = 'd0000000-0000-4000-a000-000000000001';
-const TEST_USER_2_ID = 'd0000000-0000-4000-a000-000000000002';
+const TEST_USER_ID = 'd0000000-0000-4000-a000-000000000011';
+const TEST_USER_2_ID = 'd0000000-0000-4000-a000-000000000012';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-that-is-at-least-32-characters-long';
+const authToken = jwt.sign({ id: TEST_USER_ID, email: 'commenttest@test.local', role: 'AGENT' }, JWT_SECRET, { expiresIn: '1h' });
 
 beforeAll(async () => {
   await prisma.user.upsert({
     where: { id: TEST_USER_ID },
     update: {},
-    create: { id: TEST_USER_ID, name: 'Comment Test User', email: 'commenttest@test.local', role: 'AGENT' },
+    create: { id: TEST_USER_ID, name: 'Comment Test User', email: 'commenttest@test.local', role: 'AGENT', password: '$2b$10$dummyhashedpasswordfortest1234567890abc' },
   });
   await prisma.user.upsert({
     where: { id: TEST_USER_2_ID },
     update: {},
-    create: { id: TEST_USER_2_ID, name: 'Comment Test User 2', email: 'commenttest2@test.local', role: 'ADMIN' },
+    create: { id: TEST_USER_2_ID, name: 'Comment Test User 2', email: 'commenttest2@test.local', role: 'ADMIN', password: '$2b$10$dummyhashedpasswordfortest1234567890abc' },
   });
 });
 
@@ -41,6 +44,7 @@ describe('POST /api/tickets/:id/comments - Success Cases', () => {
 
     const res = await request(app)
       .post(`/api/tickets/${ticket.id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: 'A valid comment', authorId: TEST_USER_ID })
       .expect(201);
 
@@ -61,6 +65,7 @@ describe('POST /api/tickets/:id/comments - Success Cases', () => {
 
     const res = await request(app)
       .post(`/api/tickets/${ticket.id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: 'Comment from user 2', authorId: TEST_USER_2_ID })
       .expect(201);
 
@@ -82,6 +87,7 @@ describe('POST /api/tickets/:id/comments - Validation Errors', () => {
   it('rejects missing body field', async () => {
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ authorId: TEST_USER_ID })
       .expect(400);
 
@@ -92,6 +98,7 @@ describe('POST /api/tickets/:id/comments - Validation Errors', () => {
   it('rejects missing authorId field', async () => {
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: 'Valid body' })
       .expect(400);
 
@@ -102,6 +109,7 @@ describe('POST /api/tickets/:id/comments - Validation Errors', () => {
   it('rejects whitespace-only body', async () => {
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: '   \t\n  ', authorId: TEST_USER_ID })
       .expect(400);
 
@@ -113,6 +121,7 @@ describe('POST /api/tickets/:id/comments - Validation Errors', () => {
 
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: longBody, authorId: TEST_USER_ID })
       .expect(400);
 
@@ -122,6 +131,7 @@ describe('POST /api/tickets/:id/comments - Validation Errors', () => {
   it('rejects invalid UUID format for authorId', async () => {
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: 'Valid body', authorId: 'not-a-uuid' })
       .expect(400);
 
@@ -131,6 +141,7 @@ describe('POST /api/tickets/:id/comments - Validation Errors', () => {
   it('returns error matching ApiErrorResponse shape', async () => {
     const res = await request(app)
       .post(`/api/tickets/${ticketId}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: '', authorId: TEST_USER_ID })
       .expect(400);
 
@@ -154,6 +165,7 @@ describe('POST /api/tickets/:id/comments - 404 Errors', () => {
   it('returns 404 for non-existent ticket ID', async () => {
     const res = await request(app)
       .post('/api/tickets/00000000-0000-4000-a000-000000000099/comments')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: 'Comment on ghost ticket', authorId: TEST_USER_ID })
       .expect(404);
 
@@ -168,6 +180,7 @@ describe('POST /api/tickets/:id/comments - 404 Errors', () => {
 
     const res = await request(app)
       .post(`/api/tickets/${ticket.id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: 'Comment from ghost user', authorId: '00000000-0000-4000-a000-000000000099' })
       .expect(404);
 
@@ -193,6 +206,7 @@ describe('POST /api/tickets/:id/comments - Comments on all statuses', () => {
 
       const res = await request(app)
         .post(`/api/tickets/${ticket.id}/comments`)
+        .set('Authorization', `Bearer ${authToken}`)
         .send({ body: `Comment on ${status} ticket`, authorId: TEST_USER_ID })
         .expect(201);
 
@@ -229,6 +243,7 @@ describe('Property 7: Comment body length validation', () => {
         async (whitespaceBody) => {
           const res = await request(app)
             .post(`/api/tickets/${ticketId}/comments`)
+            .set('Authorization', `Bearer ${authToken}`)
             .send({ body: whitespaceBody, authorId: TEST_USER_ID });
 
           expect(res.status).toBe(400);
@@ -249,6 +264,7 @@ describe('Property 7: Comment body length validation', () => {
         async (longBody) => {
           const res = await request(app)
             .post(`/api/tickets/${ticketId}/comments`)
+            .set('Authorization', `Bearer ${authToken}`)
             .send({ body: longBody, authorId: TEST_USER_ID });
 
           expect(res.status).toBe(400);
@@ -284,6 +300,7 @@ describe('Property 9: Comments ordered by creation time', () => {
           for (let i = 0; i < numComments; i++) {
             await request(app)
               .post(`/api/tickets/${ticket.id}/comments`)
+              .set('Authorization', `Bearer ${authToken}`)
               .send({ body: `Comment number ${i + 1}`, authorId: TEST_USER_ID })
               .expect(201);
 
@@ -296,6 +313,7 @@ describe('Property 9: Comments ordered by creation time', () => {
           // Fetch the ticket and check comment ordering
           const res = await request(app)
             .get(`/api/tickets/${ticket.id}`)
+            .set('Authorization', `Bearer ${authToken}`)
             .expect(200);
 
           const comments = res.body.comments;

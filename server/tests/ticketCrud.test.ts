@@ -1,22 +1,25 @@
 import request from 'supertest';
 import { PrismaClient } from '@prisma/client';
+import jwt from 'jsonwebtoken';
 import app from '../src/app';
 
 const prisma = new PrismaClient();
 
 const TEST_USER_ID = 'c0000000-0000-4000-a000-000000000001';
 const TEST_USER_2_ID = 'c0000000-0000-4000-a000-000000000002';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-key-that-is-at-least-32-characters-long';
+const authToken = jwt.sign({ id: TEST_USER_ID, email: 'crudtest@test.local', role: 'ADMIN' }, JWT_SECRET, { expiresIn: '1h' });
 
 beforeAll(async () => {
   await prisma.user.upsert({
     where: { id: TEST_USER_ID },
     update: {},
-    create: { id: TEST_USER_ID, name: 'CRUD Test User', email: 'crudtest@test.local', role: 'AGENT' },
+    create: { id: TEST_USER_ID, name: 'CRUD Test User', email: 'crudtest@test.local', role: 'AGENT', password: '$2b$10$dummyhashedpasswordfortest1234567890abc' },
   });
   await prisma.user.upsert({
     where: { id: TEST_USER_2_ID },
     update: {},
-    create: { id: TEST_USER_2_ID, name: 'CRUD Test User 2', email: 'crudtest2@test.local', role: 'ADMIN' },
+    create: { id: TEST_USER_2_ID, name: 'CRUD Test User 2', email: 'crudtest2@test.local', role: 'ADMIN', password: '$2b$10$dummyhashedpasswordfortest1234567890abc' },
   });
 });
 
@@ -36,6 +39,7 @@ describe('POST /api/tickets', () => {
   it('creates a ticket with valid data and returns it with status OPEN', async () => {
     const res = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Test ticket creation',
         description: 'A test description for CRUD test',
@@ -57,6 +61,7 @@ describe('POST /api/tickets', () => {
   it('rejects a ticket with missing title', async () => {
     const res = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         description: 'No title here',
         priority: 'LOW',
@@ -73,6 +78,7 @@ describe('POST /api/tickets', () => {
   it('rejects a ticket with non-existent createdBy user', async () => {
     const res = await request(app)
       .post('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
       .send({
         title: 'Ghost user ticket',
         description: 'This user does not exist',
@@ -97,7 +103,10 @@ describe('GET /api/tickets', () => {
       data: { title: 'Second ticket', description: 'Desc', priority: 'HIGH', createdBy: TEST_USER_ID },
     });
 
-    const res = await request(app).get('/api/tickets').expect(200);
+    const res = await request(app)
+      .get('/api/tickets')
+      .set('Authorization', `Bearer ${authToken}`)
+      .expect(200);
 
     // Find our test tickets in the response
     const testTickets = res.body.filter((t: any) => t.createdBy === TEST_USER_ID);
@@ -117,6 +126,7 @@ describe('GET /api/tickets', () => {
 
     const res = await request(app)
       .get('/api/tickets?keyword=uniquekeywordxyz')
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     expect(res.body.length).toBeGreaterThanOrEqual(1);
@@ -136,6 +146,7 @@ describe('GET /api/tickets', () => {
 
     const res = await request(app)
       .get('/api/tickets?status=RESOLVED')
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     expect(res.body.every((t: any) => t.status === 'RESOLVED')).toBe(true);
@@ -151,6 +162,7 @@ describe('GET /api/tickets', () => {
 
     const res = await request(app)
       .get('/api/tickets?keyword=CombinedTestAlpha&status=IN_PROGRESS')
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     expect(res.body.length).toBe(1);
@@ -170,6 +182,7 @@ describe('GET /api/tickets/:id', () => {
 
     const res = await request(app)
       .get(`/api/tickets/${ticket.id}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     expect(res.body.id).toBe(ticket.id);
@@ -181,6 +194,7 @@ describe('GET /api/tickets/:id', () => {
   it('returns 404 for non-existent ticket', async () => {
     const res = await request(app)
       .get('/api/tickets/00000000-0000-0000-0000-000000000000')
+      .set('Authorization', `Bearer ${authToken}`)
       .expect(404);
 
     expect(res.body.error.code).toBe('NOT_FOUND');
@@ -195,6 +209,7 @@ describe('PATCH /api/tickets/:id', () => {
 
     const res = await request(app)
       .patch(`/api/tickets/${ticket.id}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ title: 'Updated title', priority: 'URGENT' })
       .expect(200);
 
@@ -209,6 +224,7 @@ describe('PATCH /api/tickets/:id', () => {
 
     const res = await request(app)
       .patch(`/api/tickets/${ticket.id}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ assignedTo: null })
       .expect(200);
 
@@ -223,6 +239,7 @@ describe('PATCH /api/tickets/:id', () => {
 
     const res = await request(app)
       .patch(`/api/tickets/${ticket.id}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ title: 'Attempting edit' })
       .expect(403);
 
@@ -236,6 +253,7 @@ describe('PATCH /api/tickets/:id', () => {
 
     const res = await request(app)
       .patch(`/api/tickets/${ticket.id}`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ title: 'New title', status: 'CLOSED' })
       .expect(200);
 
@@ -257,6 +275,7 @@ describe('POST /api/tickets/:id/comments', () => {
 
     const res = await request(app)
       .post(`/api/tickets/${ticket.id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: 'This is a comment', authorId: TEST_USER_ID })
       .expect(201);
 
@@ -272,6 +291,7 @@ describe('POST /api/tickets/:id/comments', () => {
 
     const res = await request(app)
       .post(`/api/tickets/${ticket.id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: 'Comment on closed ticket', authorId: TEST_USER_ID })
       .expect(201);
 
@@ -285,6 +305,7 @@ describe('POST /api/tickets/:id/comments', () => {
 
     const res = await request(app)
       .post(`/api/tickets/${ticket.id}/comments`)
+      .set('Authorization', `Bearer ${authToken}`)
       .send({ body: '   ', authorId: TEST_USER_ID })
       .expect(400);
 

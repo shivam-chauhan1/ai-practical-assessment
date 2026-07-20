@@ -3,14 +3,6 @@ import { NotFoundError } from '../errors';
 
 const prisma = new PrismaClient();
 
-/**
- * Adds a comment to a ticket.
- * - Validates ticket exists (404)
- * - Validates authorId user exists (404)
- * - Persists comment
- * - Returns comment with author info
- * NOTE: Does NOT update Ticket.updatedAt
- */
 export async function addComment(data: { body: string; authorId: string; ticketId: string }) {
   // Validate ticket exists
   const ticket = await prisma.ticket.findUnique({ where: { id: data.ticketId } });

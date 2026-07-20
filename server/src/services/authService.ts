@@ -11,13 +11,6 @@ export interface LoginResult {
   user: { id: string; name: string; email: string; role: string };
 }
 
-/**
- * Authenticates a user by email and password.
- * - Looks up user by email
- * - Compares password against stored bcrypt hash
- * - On match: signs a JWT with { id, email, role } claims
- * - On mismatch or user-not-found: throws AuthenticationError
- */
 export async function login(email: string, password: string): Promise<LoginResult> {
   const user = await prisma.user.findUnique({ where: { email } });
 

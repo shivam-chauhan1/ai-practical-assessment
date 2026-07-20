@@ -25,3 +25,9 @@ server/prisma/*.db
 
 # Coverage
 coverage/
+
+# OpenAPI spec generation
+server/src/openapi/
+
+# Kiro
+.kiro/

@@ -5,13 +5,6 @@ import { validateTagIds } from './tagService';
 
 const prisma = new PrismaClient();
 
-/**
- * Creates a new ticket.
- * - Validates createdBy user exists
- * - Validates assignedTo user exists (if provided)
- * - Persists with status OPEN
- * - Returns ticket with validTransitions and included creator/assignee
- */
 export async function createTicket(data: {
   title: string;
   description: string;
@@ -65,9 +58,6 @@ export async function createTicket(data: {
   };
 }
 
-/**
- * Parameters for listing tickets with filtering, sorting, and pagination.
- */
 export interface ListTicketsParams {
   keyword?: string;
   status?: Status;
@@ -80,9 +70,6 @@ export interface ListTicketsParams {
   pageSize: number;
 }
 
-/**
- * Paginated response envelope for ticket listing.
- */
 export interface PaginatedTicketsResponse {
   data: Array<{
     id: string;
@@ -107,18 +94,6 @@ export interface PaginatedTicketsResponse {
   };
 }
 
-/**
- * Lists tickets with filtering, sorting, and pagination.
- * - keyword: case-insensitive substring match on title OR description
- * - status: exact enum match
- * - tagIds: tickets with at least one matching tag
- * - priority: exact enum match
- * - assignedTo: UUID match or null (when 'unassigned')
- * - AND logic between all filters
- * - Sorted by primary sort field + secondary createdAt desc for determinism
- * - Paginated using offset-based approach (skip/take)
- * - Returns { data, pagination } envelope
- */
 export async function listTickets(params: ListTicketsParams): Promise<PaginatedTicketsResponse> {
   const where: Prisma.TicketWhereInput = {};
 
@@ -192,11 +167,6 @@ export async function listTickets(params: ListTicketsParams): Promise<PaginatedT
   };
 }
 
-/**
- * Gets a ticket by ID with comments, creator, and assignee.
- * Comments are ordered by createdAt ASC (oldest first).
- * Throws NotFoundError if ticket doesn't exist.
- */
 export async function getTicketById(id: string) {
   const ticket = await prisma.ticket.findUnique({
     where: { id },
@@ -221,13 +191,6 @@ export async function getTicketById(id: string) {
   };
 }
 
-/**
- * Updates a ticket's fields (title, description, priority, assignedTo).
- * - Checks ticket exists (404)
- * - Checks terminal state (throws TicketLockedError)
- * - Validates assignedTo ref if provided
- * - NEVER touches status
- */
 export async function updateTicket(id: string, data: {
   title?: string;
   description?: string;
@@ -288,13 +251,6 @@ export async function updateTicket(id: string, data: {
   };
 }
 
-/**
- * Changes a ticket's status, enforcing the state machine.
- * - Loads the ticket (throws NotFoundError if missing)
- * - Calls isValidTransition (throws InvalidTransitionError if invalid)
- * - Updates status and updatedAt in one Prisma call
- * - Returns the updated ticket with validTransitions for the new status
- */
 export async function changeTicketStatus(ticketId: string, newStatus: Status) {
   // 1. Load the ticket
   const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });

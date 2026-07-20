@@ -31,3 +31,6 @@ server/src/openapi/
 
 # Kiro
 .kiro/
+
+# GitHub workflows
+.github/

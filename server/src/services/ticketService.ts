@@ -1,4 +1,4 @@
-import { PrismaClient, Status, Priority, Prisma } from '@prisma/client';
+import { PrismaClient, Status, Prisma } from '@prisma/client';
 import { isValidTransition, getValidTransitions, isTerminalState } from './stateMachine';
 import { NotFoundError, InvalidTransitionError, TicketLockedError, ValidationError } from '../errors';
 import { validateTagIds } from './tagService';
@@ -62,42 +62,11 @@ export interface ListTicketsParams {
   keyword?: string;
   status?: Status;
   tagIds?: string[];
-  priority?: Priority;
-  assignedTo?: string; // UUID or 'unassigned'
-  sortBy: 'updatedAt' | 'priority';
-  sortOrder: 'asc' | 'desc';
-  page: number;
-  pageSize: number;
 }
 
-export interface PaginatedTicketsResponse {
-  data: Array<{
-    id: string;
-    title: string;
-    description: string;
-    status: Status;
-    priority: Priority;
-    createdBy: string;
-    assignedTo: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-    creator: { id: string; name: string; email: string };
-    assignee: { id: string; name: string; email: string } | null;
-    tags: Array<{ id: string; name: string; createdAt: Date }>;
-    validTransitions: Status[];
-  }>;
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-export async function listTickets(params: ListTicketsParams): Promise<PaginatedTicketsResponse> {
+export async function listTickets(params: ListTicketsParams) {
   const where: Prisma.TicketWhereInput = {};
 
-  // Keyword filter (existing)
   if (params.keyword) {
     where.OR = [
       { title: { contains: params.keyword, mode: 'insensitive' } },
@@ -105,66 +74,24 @@ export async function listTickets(params: ListTicketsParams): Promise<PaginatedT
     ];
   }
 
-  // Status filter (existing)
   if (params.status) {
     where.status = params.status;
   }
 
-  // Tag filter (existing)
   if (params.tagIds && params.tagIds.length > 0) {
     where.tags = { some: { id: { in: params.tagIds } } };
   }
 
-  // Priority filter (new)
-  if (params.priority) {
-    where.priority = params.priority;
-  }
+  const tickets = await prisma.ticket.findMany({
+    where,
+    orderBy: { updatedAt: 'desc' },
+    include: { creator: true, assignee: true, tags: true },
+  });
 
-  // AssignedTo filter (new)
-  if (params.assignedTo) {
-    if (params.assignedTo === 'unassigned') {
-      where.assignedTo = null;
-    } else {
-      where.assignedTo = params.assignedTo;
-    }
-  }
-
-  // Sort: primary sort field + secondary createdAt desc for determinism
-  const orderBy: Prisma.TicketOrderByWithRelationInput[] = [
-    { [params.sortBy]: params.sortOrder },
-    { createdAt: 'desc' },
-  ];
-
-  // Pagination
-  const skip = (params.page - 1) * params.pageSize;
-  const take = params.pageSize;
-
-  // Execute findMany + count in parallel using $transaction
-  const [tickets, total] = await prisma.$transaction([
-    prisma.ticket.findMany({
-      where,
-      orderBy,
-      skip,
-      take,
-      include: { creator: true, assignee: true, tags: true },
-    }),
-    prisma.ticket.count({ where }),
-  ]);
-
-  const totalPages = total === 0 ? 0 : Math.ceil(total / params.pageSize);
-
-  return {
-    data: tickets.map(ticket => ({
-      ...ticket,
-      validTransitions: getValidTransitions(ticket.status),
-    })),
-    pagination: {
-      page: params.page,
-      pageSize: params.pageSize,
-      total,
-      totalPages,
-    },
-  };
+  return tickets.map(ticket => ({
+    ...ticket,
+    validTransitions: getValidTransitions(ticket.status),
+  }));
 }
 
 export async function getTicketById(id: string) {

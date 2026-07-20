@@ -1,22 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { Status, Priority } from '@prisma/client';
+import { Status } from '@prisma/client';
 import * as ticketService from '../services/ticketService';
 import { ValidationError } from '../errors';
-
-/**
- * Represents the shape of req.query after Zod validation for the list tickets endpoint.
- */
-interface ParsedListTicketsQuery {
-  keyword?: string;
-  status?: Status;
-  tag?: string;
-  priority?: Priority;
-  assignedTo?: string;
-  sortBy?: 'updatedAt' | 'priority';
-  sortOrder?: 'asc' | 'desc';
-  page?: number;
-  pageSize?: number;
-}
 
 export async function createTicket(req: Request, res: Response, next: NextFunction) {
   try {
@@ -29,12 +14,7 @@ export async function createTicket(req: Request, res: Response, next: NextFuncti
 
 export async function listTickets(req: Request, res: Response, next: NextFunction) {
   try {
-    const {
-      keyword, status, tag,
-      priority, assignedTo,
-      sortBy, sortOrder,
-      page, pageSize,
-    } = req.query as unknown as ParsedListTicketsQuery;
+    const { keyword, status, tag } = req.query as { keyword?: string; status?: Status; tag?: string };
 
     let tagIds: string[] | undefined;
     if (tag) {
@@ -48,12 +28,6 @@ export async function listTickets(req: Request, res: Response, next: NextFunctio
       keyword,
       status,
       tagIds,
-      priority,
-      assignedTo,
-      sortBy: sortBy ?? 'updatedAt',
-      sortOrder: sortOrder ?? 'desc',
-      page: page ?? 1,
-      pageSize: pageSize ?? 20,
     });
 
     res.json(result);

@@ -26,6 +26,19 @@ server/prisma/*.db
 # Coverage
 coverage/
 
+# Large test files (>10KB) — excluded for LLM context optimization
+server/tests/ticketFilters.test.ts
+server/tests/ticketTagFiltering.property.test.ts
+server/tests/ticketFilters.property.test.ts
+server/tests/ticketSchemas.property.test.ts
+server/tests/auth.integration.test.ts
+server/tests/comments.integration.test.ts
+server/tests/ticketCrud.test.ts
+server/tests/ticketCrud.property.test.ts
+server/tests/ticketStatus.test.ts
+server/tests/search.property.test.ts
+server/tests/ticketTagAssociation.test.ts
+
 # OpenAPI spec generation
 server/src/openapi/
 
